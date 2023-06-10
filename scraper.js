@@ -14,7 +14,7 @@ const { Storage } = require('@google-cloud/storage');
  * @param {number} end - The ending index of the review range (optional, defaults to total review count).
  * @returns {Promise<string>} - JSON string containing the scraped reviews.
  */
-async function scrapeYelpReviews(link, start , end) {
+async function scrapeYelpReviews(link, start = 0, end = null) {
   let url = link;
   const reviews = [];
   let reviewAmount;
@@ -47,7 +47,7 @@ async function scrapeYelpReviews(link, start , end) {
   reviewAmount = parseInt(reviewAmountString.replace(/[^0-9]/g, ''), 10);
 
   if (endReview == null) endReview = reviewAmount;
-  if (startReview == null) startReview = 0;
+  
 
   // Scrapes data from each page and adds it to the reviews array
   for (let x = startReview; x < endReview + 1 - 10; x += 10) {
@@ -98,7 +98,7 @@ async function scrapeYelpReviews(link, start , end) {
   // Runs the upload function
   uploadFile(JSON.stringify({ endReview, reviews })).catch(console.error);
 
-  return JSON.stringify(reviews);
+  return JSON.stringify({endReview,reviews});
 }
 
 module.exports = scrapeYelpReviews;
