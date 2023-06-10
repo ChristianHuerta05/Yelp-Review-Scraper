@@ -1,130 +1,111 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
+const {Storage} = require('@google-cloud/storage');
 
-/**
- * Scrapes Yelp reviews based on the input query or URL.
- * @param {string} input - The Yelp URL or search query.
- * @returns {Object[]} - Array of unique reviewer names with their location, rating, and text.
- */
-async function scrapeYelpReviews(input) {
-  const lastIndex = input.lastIndexOf('?');
-  if (lastIndex !== -1) {
-   input = input.substring(0, lastIndex);
-  }
 
-  try {
-    let url;
-    if (input.startsWith('https://www.yelp.com/')) {
-      url = input;
-    } else {
-      url = `https://www.yelp.com/search?find_desc=${encodeURIComponent(input)}`;
-    }
-
-    const reviewerNames = [];
-    let success = false;
-    let requestCounter = 0; // Counter for the number of requests made
-
-    while (!success) {
-      const response = await axios.get(url);
-      const html = response.data;
-      const $main = cheerio.load(html);
-
-      // Extract the number of reviews
-      const targetElement = $main('a.css-19v1rkv');
-      const str = targetElement.text();
-      const pattern = /^\(([\d,]+)\sreviews\)/;
-      const match = str.match(pattern);
-      let number;
-
-      if (match && match[1]) {
-        const numberString = match[1].replace(/,/g, '');
-        number = parseInt(numberString, 10);
-      }
-
-      const promises = [];
-      for (let x = 0; x < number + 10; x += 10) {
-        const pageNum = x === 0 ? '' : `?start=${x}`;
-        promises.push(scrape(pageNum, url, $main, reviewerNames));
-      }
-
-      await Promise.all(promises);
-
-      if (reviewerNames.length > 0) {
-        success = true;
-      } else {
-        // Delay before retrying
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        requestCounter++;
-
-        // Check if 15 requests have been made and the array is still empty
-        if (requestCounter === 15) {
-          return []; // Return the empty array
-        }
-      }
-    }
-
-    const uniqueReviewerNames = removeDuplicates(reviewerNames);
-    return uniqueReviewerNames;
-  } catch (error) {
-    console.error('Error:', error);
-    return [];
-  }
-}
-
-/**
- * Scrapes the reviews from a specific page.
- * @param {string} pageNumber - The page number to scrape.
- * @param {string} url - The base URL.
- * @param {Function} $ - Cheerio function.
- * @param {Object[]} reviewerNames - Array to store the reviewer names.
- */
-async function scrape(pageNumber, url, $, reviewerNames) {
-  const updatedUrl = url + pageNumber;
-  const response = await axios.get(updatedUrl);
-  const html = response.data;
-  const $page = cheerio.load(html);
-
-  $page('.margin-b5__09f24__pTvws.border-color--default__09f24__NPAKY').each((index, element) => {
-    const parentDiv = $page(element);
-    const nameElement = parentDiv.find('span.fs-block.css-ux5mu6[data-font-weight="bold"]');
-    const locationElement = parentDiv.find('span.css-qgunke');
-    const ratingElement = parentDiv.find('span.display--inline__09f24__c6N_k.border-color--default__09f24__NPAKY');
-    const textElement = parentDiv.find('span.raw__09f24__T4Ezm');
-    const dateElement = parentDiv.find('span.css-chan6m');
+async function scrapeYelpReviews(link,start,end){
   
+let url = link;
+const reviews = [];
+let reviewAmount;
+let reviewAmountString;
+const promiseArray = [];
+const startReview = start;
+let endReview = end;
 
-    const location = locationElement.text();
-    const name = nameElement.text();
-    const rating = ratingElement.find('div').first().attr('aria-label');
-    const text = textElement.text();
-    const date = dateElement.text();
 
 
-
-    if (name !== '' && name !== "Username") {
-      reviewerNames.push({ name, location, rating, text, date});
-    }
+//create google cloud storage object
+const googleCloud = new Storage({
+  keyFilename: 'path location to key file.json',
+  projectId: 'project id number,found in key file'
   });
+
+
+//get HTML from page based on url
+async function getHTML(pageURL){
+    const { data: html} = await axios.get(pageURL);
+    return html
+};
+
+
+//runs initially to get the review amount
+await getHTML(url).then((res) =>{
+    const $ = cheerio.load(res);
+   reviewAmountString = $(`body > yelp-react-root > div:nth-child(1) > div.photoHeader__09f24__nPvHp.border-color--default__09f24__NPAKY > div.photo-header-content-container__09f24__jDLBB.border-color--default__09f24__NPAKY > div.photo-header-content__09f24__q7rNO.padding-r2__09f24__ByXi4.border-color--default__09f24__NPAKY > div > div > div.arrange__09f24__LDfbs.gutter-1-5__09f24__vMtpw.vertical-align-middle__09f24__zU9sE.margin-b2__09f24__CEMjT.border-color--default__09f24__NPAKY > div.arrange-unit__09f24__rqHTg.arrange-unit-fill__09f24__CUubG.border-color--default__09f24__NPAKY.nowrap__09f24__lBkC2 > span > a`).text()
+});
+reviewAmount = parseInt(reviewAmountString.replace(/[^0-9]/g, ''), 10);
+
+
+if(endReview == null)
+endReview = reviewAmount
+
+if(startReview == null)
+startReview = 0;
+
+
+//scrapes data from page then adds to array
+
+
+for(let x = startReview;x<endReview+1-10;x+=10){
+
+await promiseArray.push(scrape(x));
+}
+    async function scrape(pageNum){
+        let pageURL
+        if(pageNum>9)
+ pageURL = url+"?start="+pageNum;
+else
+pageURL = url
+
+
+let htmlContent = await getHTML(pageURL)
+
+scrapePage(htmlContent)
+async function scrapePage(res){
+
+
+
+    const $ = cheerio.load(res);
+    
+   
+    for(let reviewNum = 1; reviewNum<11;reviewNum++){
+
+   let review = $(`#reviews > section > div:nth-child(2) > ul > li:nth-child(${reviewNum})`)
+   let name = review.find(`> div > div.margin-b3__09f24__l9v5d.border-color--default__09f24__NPAKY > div > div.css-1r871ch.border-color--default__09f24__NPAKY > div > div > div.arrange-unit__09f24__rqHTg.arrange-unit-fill__09f24__CUubG.border-color--default__09f24__NPAKY > div.user-passport-info.border-color--default__09f24__NPAKY > span > a`).text();
+   let location = review.find(`> div > div.margin-b3__09f24__l9v5d.border-color--default__09f24__NPAKY > div > div.css-1r871ch.border-color--default__09f24__NPAKY > div > div > div.arrange-unit__09f24__rqHTg.arrange-unit-fill__09f24__CUubG.border-color--default__09f24__NPAKY > div.user-passport-info.border-color--default__09f24__NPAKY > div.responsive-hidden-small__09f24__qQFtj.border-color--default__09f24__NPAKY > div > span`).text();
+   let date = review.find(`> div > div.margin-t1__09f24__w96jn.margin-b1-5__09f24__NHcQi.border-color--default__09f24__NPAKY > div > div.arrange-unit__09f24__rqHTg.arrange-unit-fill__09f24__CUubG.border-color--default__09f24__NPAKY > span`).text();
+   let text = review.find(`> div > div:nth-child(4) > p > span`).text();
+   let rating = review.find(`> div > div.margin-t1__09f24__w96jn.margin-b1-5__09f24__NHcQi.border-color--default__09f24__NPAKY > div > div:nth-child(1) > span > div`).attr('aria-label')
+
+   if(name == ""||name == undefined)
+   continue;
+    reviews.push({name,location,rating,text,date })
+
+
+}
+    }
+
+
+    }
+
+
+
+//run scraper for all pages
+await Promise.all(promiseArray)
+
+//Sends reviews in JSON format to the bucket, fill in bucketName with the bucket name in google cloud and fileName should be the desired name of the JSON file that will be uploaded
+async function uploadFile(jsonReviews) {
+  const bucketName = 'BUCKET NAME HERE';
+  const fileName = 'NAME OF FILE.json';
+
+  await googleCloud.bucket(bucketName).file(fileName).save(jsonReviews);
 }
 
-/**
- * Removes duplicate reviewer names from the array.
- * @param {Object[]} arr - Array of reviewer names.
- * @returns {Object[]} - Array with duplicate names removed.
- */
-function removeDuplicates(arr) {
-  const uniqueNames = [];
-  const addedNames = new Set();
+//runs function
+uploadFile(JSON.stringify({endReview,reviews})).catch(console.error);
 
-  for (const item of arr) {
-    if (!addedNames.has(item.name)) {
-      uniqueNames.push(item);
-      addedNames.add(item.name);
-    }
-  }
-
-  return uniqueNames;
+return JSON.stringify(reviews);
 }
 
 module.exports = scrapeYelpReviews;
