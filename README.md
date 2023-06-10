@@ -9,24 +9,28 @@ scraper.js module takes in the url of a businesses main yelp page then returns a
     name: 'reviewer name.',
     location: 'reviewer location',
     rating: 'reviewer rating',
-    text: 'reviewer text’
+    text: 'reviewer text’ ,
+    date: 'review date'
   },
   {
-       name: 'reviewer name.',
+    name: 'reviewer name.',
     location: 'reviewer location',
     rating: 'reviewer rating',
-    text: 'reviewer text’
+    text: 'reviewer text’ ,
+    date: 'review date'
   },
   {
-      name: 'reviewer name.',
+    name: 'reviewer name.',
     location: 'reviewer location',
     rating: 'reviewer rating',
-    text: 'reviewer text’
+    text: 'reviewer text’ ,
+    date: 'review date'
   },
   {
-      name: 'reviewer name.',
+    name: 'reviewer name.',
     location: 'reviewer location',
     rating: 'reviewer rating',
-    text: 'reviewer text’
+    text: 'reviewer text’ ,
+    date: 'review date'
   }
 ]
