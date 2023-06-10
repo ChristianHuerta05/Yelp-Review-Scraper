@@ -46,7 +46,7 @@ async function scrapeYelpReviews(link, start = 0, end = null) {
   });
   reviewAmount = parseInt(reviewAmountString.replace(/[^0-9]/g, ''), 10);
 
-  if (endReview == null) endReview = reviewAmount;
+  if (endReview == null) endReview = reviewAmount+9;
   
 
   // Scrapes data from each page and adds it to the reviews array
