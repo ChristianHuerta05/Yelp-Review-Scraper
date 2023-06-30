@@ -4,7 +4,7 @@ Scrapes reviews from businesses yelp url
 
 scraper.js module takes in the url of a businesses main yelp page then returns array with review objects, example of response shown below.
 
-endReview:,
+{endReview:,
 businessName:,
 totalRating:,
 ,[
@@ -41,3 +41,4 @@ totalRating:,
     images[]
   }
 ]
+}
