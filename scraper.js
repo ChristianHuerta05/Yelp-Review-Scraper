@@ -56,7 +56,8 @@ async function scrapeYelpReviews(link, start = 0, end = null) {
 
 
  
-
+//decides how to sort reviews
+const ReviewsSort = '&sort_by='+'date_desc' //for newest review: date_desc, for oldest: date_asc, for highest rating: rating_desc, for lowest rating: rating_asc, for elites: elites_desc, for default make string blank
 
   // Scrapes data from each page and adds it to the reviews array
   for (let x = startReview; x < endReview + 1 - 10; x += 10) {
@@ -65,8 +66,8 @@ async function scrapeYelpReviews(link, start = 0, end = null) {
 
   async function scrape(pageNum) {
     let pageURL;
-    if (pageNum > 9) pageURL = url + '?start=' + pageNum;
-    else pageURL = url;
+     pageURL = url + '?start=' + pageNum + ReviewsSort;
+    
 
     let htmlContent = await getHTML(pageURL);
 
