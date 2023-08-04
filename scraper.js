@@ -84,6 +84,8 @@ const ReviewsSort = '&sort_by='+'date_desc' //for newest review: date_desc, for 
       let date = review.find(`> div > div.margin-t1__09f24__w96jn.margin-b1-5__09f24__NHcQi.border-color--default__09f24__NPAKY > div > div.arrange-unit__09f24__rqHTg.arrange-unit-fill__09f24__CUubG.border-color--default__09f24__NPAKY > span`).text();
       let text = review.find(`> div > div:nth-child(4) > p > span`).text();
       let rating = review.find(`> div > div.margin-t1__09f24__w96jn.margin-b1-5__09f24__NHcQi.border-color--default__09f24__NPAKY > div > div:nth-child(1) > span > div`).attr('aria-label');
+      let userLink = "https://www.yelp.com/"+review.find('a').attr('href')
+                               
       let imageNum = $(`#reviews > section > div:nth-child(2) > ul > li:nth-child(${reviewNum}) > div > div:nth-child(3) > div > span > a`).text();
       let images = [];
       //if there are images in review, grabs url for each image and adds to array
@@ -108,7 +110,7 @@ const ReviewsSort = '&sort_by='+'date_desc' //for newest review: date_desc, for 
      
 
       if (name == '' || name == undefined) continue;
-      reviews.push({ name, location, rating, text, date,images });
+      reviews.push({ name, location, rating, text, date,images,userLink });
     }
   }
 
