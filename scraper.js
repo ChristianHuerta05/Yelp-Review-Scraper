@@ -1,151 +1,233 @@
-/**
- * This program scrapes Yelp reviews based on a given URL and retrieves the reviews within a specified range.
- * The scraped reviews are stored in a JSON file and uploaded to Google Cloud Storage.
- */
-
-const axios = require('axios');
-const cheerio = require('cheerio');
+const puppeteer = require('puppeteer');
 const { Storage } = require('@google-cloud/storage');
+/*
 
-/**
- * Scrapes Yelp reviews from the specified URL within the given review range.
- * @param {string} link - The URL of the Yelp page to scrape reviews from.
- * @param {number} start - The starting index of the review range (optional, defaults to 0).
- * @param {number} end - The ending index of the review range (optional, defaults to total review count).
- * @returns {Promise<string>} - JSON string containing the scraped reviews.
- */
-async function scrapeYelpReviews(link, start = 0, end = null) {
-  let url = link;
-  const reviews = [];
-  let reviewAmount;
-  let reviewAmountString;
-  const promiseArray = [];
-  const startReview = start;
-  let endReview = end;
+//refrences to change if website change
 
-  let businessName;
-  let totalRating;
-  // Create Google Cloud Storage object
-  const googleCloud = new Storage({
-    keyFilename: 'path/to/keyfile.json',
-    projectId: 'your-project-id',
+
+//review number
+"body > yelp-react-root > div:nth-child(1) > div.photoHeader__09f24__nPvHp.css-1qn0b6x > div.photo-header-content-container__09f24__jDLBB.css-1qn0b6x > div.photo-header-content__09f24__q7rNO.css-2wl9y > div > div > div.arrange__09f24__LDfbs.gutter-1-5__09f24__vMtpw.vertical-align-middle__09f24__zU9sE.css-9ul5p9 > div.arrange-unit__09f24__rqHTg.arrange-unit-fill__09f24__CUubG.css-v3nuob > span.css-1x9ee72 > a"
+
+//review list items
+"#reviews > section > div.css-1qn0b6x > ul > li:nth-child(1)"
+  
+//name 
+  `#reviews > section > div.css-1qn0b6x > ul > li:nth-child(${z + 1}) > div > div.css-174a15u > div > div.css-1u1p5a2 > div > div > div.arrange-unit__09f24__rqHTg.arrange-unit-fill__09f24__CUubG.css-1qn0b6x > div.user-passport-info.css-1qn0b6x > span > a`
+
+//location
+`#reviews > section > div.css-1qn0b6x > ul > li:nth-child(${z + 1}) > div > div.css-174a15u > div > div.css-1u1p5a2 > div > div > div.arrange-unit__09f24__rqHTg.arrange-unit-fill__09f24__CUubG.css-1qn0b6x > div.user-passport-info.css-1qn0b6x > div > div > span`).textContent
+
+//rating
+`#reviews > section > div.css-1qn0b6x > ul > li:nth-child(${z + 1}) > div > div.css-10n911v > div > div:nth-child(1) > span > div`).getAttribute('aria-label');
+
+//text
+`#reviews > section > div.css-1qn0b6x > ul > li:nth-child(${z + 1}) > div > div.css-9ul5p9 > p > span`).textContent
+
+//date
+`#reviews > section > div.css-1qn0b6x > ul > li:nth-child(${z + 1}) > div > div.css-10n911v > div > div.arrange-unit__09f24__rqHTg.arrange-unit-fill__09f24__CUubG.css-1qn0b6x > span`).textContent
+
+//images container
+#reviews > section > div.css-1qn0b6x > ul > li:nth-child(${z + 1}) > div > div.css-1cfy6na > div`
+
+//number of images in container
+`#reviews > section > div.css-1qn0b6x > ul > li:nth-child(${z + 1}) > div > div.css-1cfy6na > div`).querySelectorAll('img').length
+
+//images multiple
+`#reviews > section > div.css-1qn0b6x > ul > li:nth-child(${z + 1}) > div > div.css-1cfy6na > div > div:nth-child(${q + 1}) > div > div > div > a > img`).getAttribute('src'))
+
+//images single
+`#reviews > section > div.css-1qn0b6x > ul > li:nth-child(${z + 1}) > div > div.css-1cfy6na > div > div > div > div > div > a > img`).getAttribute('src'))
+
+//userLink 
+`#reviews > section > div.css-1qn0b6x > ul > li:nth-child(${z + 1}) > div > div.css-174a15u > div > div.css-1u1p5a2 > div > div > div.arrange-unit__09f24__rqHTg.arrange-unit-fill__09f24__CUubG.css-1qn0b6x > div.user-passport-info.css-1qn0b6x > span > a`).getAttribute('href')
+
+
+*/
+async function scraperYelpReviews(url, getAmount) {
+  const reviewArray = [];
+
+
+
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ['--no-sandbox', '--disabled-setuid-sandbox'],
+    defaultNavigationTimeout: 0,
   });
+  try {
 
-  /**
-   * Retrieves the HTML content from a given URL.
-   * @param {string} pageURL - The URL to fetch HTML content from.
-   * @returns {Promise<string>} - HTML content of the page.
-   */
-  async function getHTML(pageURL) {
-    const { data: html } = await axios.get(pageURL);
-    return html;
-  }
+    const page = await browser.newPage();
 
-  // Runs initially to get the total review count
-  await getHTML(url).then((res) => {
-    const $ = cheerio.load(res);
-    reviewAmountString = $(`body > yelp-react-root > div:nth-child(1) > div.photoHeader__09f24__nPvHp.border-color--default__09f24__NPAKY > div.photo-header-content-container__09f24__jDLBB.border-color--default__09f24__NPAKY > div.photo-header-content__09f24__q7rNO.padding-r2__09f24__ByXi4.border-color--default__09f24__NPAKY > div > div > div.arrange__09f24__LDfbs.gutter-1-5__09f24__vMtpw.vertical-align-middle__09f24__zU9sE.margin-b2__09f24__CEMjT.border-color--default__09f24__NPAKY > div.arrange-unit__09f24__rqHTg.arrange-unit-fill__09f24__CUubG.border-color--default__09f24__NPAKY.nowrap__09f24__lBkC2 > span > a`).text();
-    //gets business name
-     businessName = $('body > yelp-react-root > div:nth-child(1) > div.photoHeader__09f24__nPvHp.border-color--default__09f24__NPAKY > div.photo-header-content-container__09f24__jDLBB.border-color--default__09f24__NPAKY > div.photo-header-content__09f24__q7rNO.padding-r2__09f24__ByXi4.border-color--default__09f24__NPAKY > div > div.arrange-unit__09f24__rqHTg.arrange-unit-fill__09f24__CUubG.border-color--default__09f24__NPAKY > div.headingLight__09f24__N86u1.margin-b1__09f24__vaLrm.border-color--default__09f24__NPAKY > h1').text();
-    //gets total rating
-    totalRating = $('body > yelp-react-root > div:nth-child(1) > div.photoHeader__09f24__nPvHp.border-color--default__09f24__NPAKY > div.photo-header-content-container__09f24__jDLBB.border-color--default__09f24__NPAKY > div.photo-header-content__09f24__q7rNO.padding-r2__09f24__ByXi4.border-color--default__09f24__NPAKY > div > div.arrange-unit__09f24__rqHTg.arrange-unit-fill__09f24__CUubG.border-color--default__09f24__NPAKY > div.arrange__09f24__LDfbs.gutter-1-5__09f24__vMtpw.vertical-align-middle__09f24__zU9sE.margin-b2__09f24__CEMjT.border-color--default__09f24__NPAKY > div:nth-child(1) > span > div').attr('aria-label');
-  });
-  reviewAmount = parseInt(reviewAmountString.replace(/[^0-9]/g, ''), 10);
+    /*sorting parameters:
+        oldest: ?sort_by=date_asc  
+        newest: ?sort_by=date_desc
+        Highest Rated: ?sort_by=rating_desc
+        Lowest Rated: ?sort_by=rating_asc
+        Elites: ?sort_by=elites_desc
+        
+        
+    */
+    let sortType = "&sort_by=date_desc"
 
-  if (endReview == null) endReview = reviewAmount+9;
+    //create google cloud storage object
+    const googleCloud = new Storage({
+      keyFilename: 'path location to key file.json',
+      projectId: 'project id number,found in key file'
+    });
 
 
- 
-//decides how to sort reviews
-const ReviewsSort = '&sort_by='+'date_desc' //for newest review: date_desc, for oldest: date_asc, for highest rating: rating_desc, for lowest rating: rating_asc, for elites: elites_desc, for default make string blank
 
-  // Scrapes data from each page and adds it to the reviews array
-  for (let x = startReview; x < endReview + 1 - 10; x += 10) {
-    await promiseArray.push(await scrape(x));
-  }
+    //opens initial page
+    await page.goto(url)
 
-  async function scrape(pageNum) {
-    let pageURL;
-     pageURL = url + '?start=' + pageNum + ReviewsSort;
-    
+    //wait then get review number  
 
-    let htmlContent = await getHTML(pageURL);
+    let reviewNumber;
 
-    await scrapePage(htmlContent);
-  }
-
-  async function scrapePage(res) {
-    const $ = cheerio.load(res);
-
-    for (let reviewNum = 1; reviewNum < 11; reviewNum++) {
-      let review = $(`#reviews > section > div:nth-child(2) > ul > li:nth-child(${reviewNum})`);
-      let name = review.find(`> div > div.margin-b3__09f24__l9v5d.border-color--default__09f24__NPAKY > div > div.css-1r871ch.border-color--default__09f24__NPAKY > div > div > div.arrange-unit__09f24__rqHTg.arrange-unit-fill__09f24__CUubG.border-color--default__09f24__NPAKY > div.user-passport-info.border-color--default__09f24__NPAKY > span > a`).text();
-      let location = review.find(`> div > div.margin-b3__09f24__l9v5d.border-color--default__09f24__NPAKY > div > div.css-1r871ch.border-color--default__09f24__NPAKY > div > div > div.arrange-unit__09f24__rqHTg.arrange-unit-fill__09f24__CUubG.border-color--default__09f24__NPAKY > div.user-passport-info.border-color--default__09f24__NPAKY > div.responsive-hidden-small__09f24__qQFtj.border-color--default__09f24__NPAKY > div > span`).text();
-      let date = review.find(`> div > div.margin-t1__09f24__w96jn.margin-b1-5__09f24__NHcQi.border-color--default__09f24__NPAKY > div > div.arrange-unit__09f24__rqHTg.arrange-unit-fill__09f24__CUubG.border-color--default__09f24__NPAKY > span`).text();
-      let text = review.find(`> div > div:nth-child(4) > p > span`).text();
-      let rating = review.find(`> div > div.margin-t1__09f24__w96jn.margin-b1-5__09f24__NHcQi.border-color--default__09f24__NPAKY > div > div:nth-child(1) > span > div`).attr('aria-label');
-      let userLink = "https://www.yelp.com/"+review.find('a').attr('href')
-                               
-      let imageNum = $(`#reviews > section > div:nth-child(2) > ul > li:nth-child(${reviewNum}) > div > div:nth-child(3) > div > span > a`).text();
-      let images = [];
-      //if there are images in review, grabs url for each image and adds to array
-      if(imageNum.length > 0){
-        imageNum = parseInt(imageNum.match(/\d+/)[0]);
-        for(let i = 1; i <= imageNum; i++){
-        let imageUrl = $(`#reviews > section > div:nth-child(2) > ul > li:nth-child(${reviewNum}) > div > div.margin-t3__09f24__riq4X.margin-b2__09f24__CEMjT.border-color--default__09f24__NPAKY > div > div:nth-child(${i}) > div > div > div > a > img`).attr('src')
-         
-        //if too many images in review, go to reviewer page instead and get all images from there
-        if(imageUrl==undefined){
-          images = [];
-           let reviewerPageURL =  await $(`#reviews > section > div:nth-child(2) > ul > li:nth-child(${reviewNum}) > div > div.margin-t3__09f24__riq4X.margin-b2__09f24__CEMjT.border-color--default__09f24__NPAKY > p > a`).attr('href');
-          images = await getReviewerPageImages(reviewerPageURL,imageNum);
-           
-          break;
-        } 
-         images.push(imageUrl);
-        }
-       
-      }         
-
-     
-
-      if (name == '' || name == undefined) continue;
-      reviews.push({ name, location, rating, text, date,images,userLink });
+    const elementTest = await page.$(`#main-content > div.css-174a15u > div > div > div.arrange__09f24__LDfbs.gutter-1-5__09f24__vMtpw.vertical-align-middle__09f24__zU9sE.css-9ul5p9 > div.arrange-unit__09f24__rqHTg.arrange-unit-fill__09f24__CUubG.css-v3nuob > span.css-1evauet > a`) !== null;
+    let isDefaultHTMLLayout = false;
+    if (elementTest) {
+      isDefaultHTMLLayout = true;
+      reviewNumber = await page.evaluate(async () => {
+        let reviewtemp = await document.querySelector(`#main-content > div.css-174a15u > div > div > div.arrange__09f24__LDfbs.gutter-1-5__09f24__vMtpw.vertical-align-middle__09f24__zU9sE.css-9ul5p9 > div.arrange-unit__09f24__rqHTg.arrange-unit-fill__09f24__CUubG.css-v3nuob > span.css-1evauet > a`).textContent
+        reviewtemp = parseInt(reviewtemp.match(/\d+/g).join(""));
+        return reviewtemp;
+      })
+    } else {
+      await page.waitForSelector("body > yelp-react-root > div:nth-child(1) > div.photoHeader__09f24__nPvHp.css-1qn0b6x > div.photo-header-content-container__09f24__jDLBB.css-1qn0b6x > div.photo-header-content__09f24__q7rNO.css-2wl9y > div > div > div.arrange__09f24__LDfbs.gutter-1-5__09f24__vMtpw.vertical-align-middle__09f24__zU9sE.css-9ul5p9 > div.arrange-unit__09f24__rqHTg.arrange-unit-fill__09f24__CUubG.css-v3nuob > span.css-1x9ee72 > a")
+      reviewNumber = await page.evaluate(async () => {
+        let reviewtemp = await document.querySelector("body > yelp-react-root > div:nth-child(1) > div.photoHeader__09f24__nPvHp.css-1qn0b6x > div.photo-header-content-container__09f24__jDLBB.css-1qn0b6x > div.photo-header-content__09f24__q7rNO.css-2wl9y > div > div > div.arrange__09f24__LDfbs.gutter-1-5__09f24__vMtpw.vertical-align-middle__09f24__zU9sE.css-9ul5p9 > div.arrange-unit__09f24__rqHTg.arrange-unit-fill__09f24__CUubG.css-v3nuob > span.css-1x9ee72 > a").textContent
+        reviewtemp = parseInt(reviewtemp.match(/\d+/g).join(""));
+        return reviewtemp;
+      })
     }
-  }
 
-  async function getReviewerPageImages(reviewerPageLink, amountOfImages){
-    const userPage = await axios.get('https://www.yelp.com/'+reviewerPageLink);
-           const html2 = userPage.data;
-           const $2 = cheerio.load(html2);
-           let newImages = [];
-           for(let z = 1; z <= amountOfImages; z++){
-            let imageProfileUrl = $2(`#super-container > div.container > div > div.media-landing.js-media-landing > div.media-landing_gallery.photos > ul > li:nth-child(${z}) > div > img`).attr('src');
-             newImages.push(imageProfileUrl);
+
+
+    //for getting a custom amount of reviews
+    if (getAmount != undefined) {
+      reviewNumber = getAmount;
+    }
+    //close initial page
+    page.close()
+    //for each page that exists add a new page and search
+
+    if (reviewNumber < 10) {
+      reviewNumbertemp = 10
+    } else {
+      reviewNumbertemp = reviewNumber
+    }
+
+
+    for (let i = 0; i <= reviewNumbertemp - 10; i += 10) {
+
+      if (i > reviewNumber) {
+        continue
+      }
+      //open new tab
+      const page = await browser.newPage();
+      page.setDefaultNavigationTimeout(100000)
+      //search page and open
+      let newURL = url + "?start=" + i + sortType
+
+
+
+      await page.goto(newURL)
+
+      //make sure reviews have loaded
+
+
+      await page.waitForSelector("#reviews > section > div.css-1qn0b6x > ul > li:nth-child(1)")
+
+      let loopcount = 0;
+
+      //if not on the last loop get 10 reviews else get remaining
+      if ((reviewNumber - i) > 10) {
+        loopcount = 10;
+      } else {
+        loopcount = reviewNumber - i
+      }
+
+
+
+      //loops for each review
+      for (let z = 0; z < loopcount; z++) {
+
+
+        let reviewObject = await page.evaluate((z) => {
+          let name = document.querySelector(`#reviews > section > div.css-1qn0b6x > ul > li:nth-child(${z + 1}) > div > div.css-174a15u > div > div.css-1u1p5a2 > div > div > div.arrange-unit__09f24__rqHTg.arrange-unit-fill__09f24__CUubG.css-1qn0b6x > div.user-passport-info.css-1qn0b6x > span > a`).textContent
+          let location = document.querySelector(`#reviews > section > div.css-1qn0b6x > ul > li:nth-child(${z + 1}) > div > div.css-174a15u > div > div.css-1u1p5a2 > div > div > div.arrange-unit__09f24__rqHTg.arrange-unit-fill__09f24__CUubG.css-1qn0b6x > div.user-passport-info.css-1qn0b6x > div > div > span`).textContent
+          let text = document.querySelector(`#reviews > section > div.css-1qn0b6x > ul > li:nth-child(${z + 1}) > div > div.css-9ul5p9 > p > span`).textContent
+
+          let rating = document.querySelector(`#reviews > section > div.css-1qn0b6x > ul > li:nth-child(${z + 1}) > div > div.css-10n911v > div > div:nth-child(1) > span > div`).getAttribute('aria-label');
+          let date = document.querySelector(`#reviews > section > div.css-1qn0b6x > ul > li:nth-child(${z + 1}) > div > div.css-10n911v > div > div.arrange-unit__09f24__rqHTg.arrange-unit-fill__09f24__CUubG.css-1qn0b6x > span`).textContent
+
+          let images = []
+
+          //get images
+          if (document.querySelector(`#reviews > section > div.css-1qn0b6x > ul > li:nth-child(${z + 1}) > div > div.css-1cfy6na > div`) !== null) {
+
+            let amount = document.querySelector(`#reviews > section > div.css-1qn0b6x > ul > li:nth-child(${z + 1}) > div > div.css-1cfy6na > div`).querySelectorAll('img').length
+
+            if (amount > 1) {
+              for (let q = 0; q < amount; q++) {
+                images.push(document.querySelector(`#reviews > section > div.css-1qn0b6x > ul > li:nth-child(${z + 1}) > div > div.css-1cfy6na > div > div:nth-child(${q + 1}) > div > div > div > a > img`).getAttribute('src'))
+
+              }
+            } else {
+              images.push(document.querySelector(`#reviews > section > div.css-1qn0b6x > ul > li:nth-child(${z + 1}) > div > div.css-1cfy6na > div > div > div > div > div > a > img`).getAttribute('src'))
+            }
           }
 
-return newImages;
+
+          let userLink = document.querySelector(`#reviews > section > div.css-1qn0b6x > ul > li:nth-child(${z + 1}) > div > div.css-174a15u > div > div.css-1u1p5a2 > div > div > div.arrange-unit__09f24__rqHTg.arrange-unit-fill__09f24__CUubG.css-1qn0b6x > div.user-passport-info.css-1qn0b6x > span > a`).getAttribute('href')
+
+          userLink = "https://www.yelp.com/" + userLink
+          return { name, location, rating, text, date, images, userLink }
+        }, z)
+
+
+
+
+        reviewArray.push(reviewObject)
+      }
+
+
+      page.close()
+
+
+
+
+
+
+
+
+    }
+
+
+
+    browser.close()
+
+
+    //Sends reviews in JSON format to the bucket, fill in bucketName with the bucket name in google cloud and fileName should be the desired name of the JSON file that will be uploaded
+    async function uploadFile(jsonReviews) {
+      const bucketName = 'BUCKET NAME HERE';
+      const fileName = 'NAME OF FILE.json';
+
+      await googleCloud.bucket(bucketName).file(fileName).save(jsonReviews);
+    }
+    //runs function
+    uploadFile(JSON.stringify({ reviewNumber, reviewArray })).catch(console.error);
+
+    return JSON.stringify({ reviewNumber, reviewArray });
+  } catch (error) {
+    browser.close()
+    console.error('error: ', error)
+    return [];
   }
 
-  // Run the scraper for all pages
-  await Promise.all(promiseArray);
 
-  /**
-   * Uploads reviews in JSON format to a Google Cloud Storage bucket.
-   * @param {string} jsonReviews - JSON string containing the reviews.
-   * @returns {Promise<void>}
-   */
-  async function uploadFile(jsonReviews) {
-    const bucketName = 'your-bucket-name';
-    const fileName = 'reviews.json';
 
-    await googleCloud.bucket(bucketName).file(fileName).save(jsonReviews);
-  }
 
-  // Runs the upload function
-  uploadFile(JSON.stringify({ endReview,businessName,totalRating, reviews })).catch(console.error);
-
-  return JSON.stringify({ endReview,businessName,totalRating, reviews });
 }
 
-module.exports = scrapeYelpReviews;
+module.exports = scraperYelpReviews;
