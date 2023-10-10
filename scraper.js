@@ -33,10 +33,10 @@ const { Storage } = require('@google-cloud/storage');
 `#reviews > section > div.css-1qn0b6x > ul > li:nth-child(${z + 1}) > div > div.css-1cfy6na > div`).querySelectorAll('img').length
 
 //images multiple
-`#reviews > section > div.css-1qn0b6x > ul > li:nth-child(${z + 1}) > div > div.css-1cfy6na > div > div:nth-child(${q + 1}) > div > div > div > a > img`).getAttribute('src'))
+`#reviews > section > div.css-1qn0b6x > ul > li:nth-child(${z + 1}) > div > div.css-1cfy6na > div > div:nth-child(${q + 1}) > div > div > div > img`).getAttribute('src'))
 
 //images single
-`#reviews > section > div.css-1qn0b6x > ul > li:nth-child(${z + 1}) > div > div.css-1cfy6na > div > div > div > div > div > a > img`).getAttribute('src'))
+`#reviews > section > div.css-1qn0b6x > ul > li:nth-child(${z + 1}) > div > div.css-1cfy6na > div > div > div > div > div> img`).getAttribute('src'))
 
 //userLink 
 `#reviews > section > div.css-1qn0b6x > ul > li:nth-child(${z + 1}) > div > div.css-174a15u > div > div.css-1u1p5a2 > div > div > div.arrange-unit__09f24__rqHTg.arrange-unit-fill__09f24__CUubG.css-1qn0b6x > div.user-passport-info.css-1qn0b6x > span > a`).getAttribute('href')
@@ -125,7 +125,7 @@ async function scraperYelpReviews(url, getAmount) {
       }
       //open new tab
       const page = await browser.newPage();
-      page.setDefaultNavigationTimeout(100000)
+      page.setDefaultNavigationTimeout(1000000)
       //search page and open
       let newURL = url + "?start=" + i + sortType
 
@@ -170,11 +170,12 @@ async function scraperYelpReviews(url, getAmount) {
 
             if (amount > 1) {
               for (let q = 0; q < amount; q++) {
-                images.push(document.querySelector(`#reviews > section > div.css-1qn0b6x > ul > li:nth-child(${z + 1}) > div > div.css-1cfy6na > div > div:nth-child(${q + 1}) > div > div > div > a > img`).getAttribute('src'))
+                images.push(document.querySelector(`#reviews > section > div.css-1qn0b6x > ul > li:nth-child(${z + 1}) > div > div.css-1cfy6na > div > div:nth-child(${q + 1}) > div > div > div > img`).getAttribute('src'))
 
               }
             } else {
-              images.push(document.querySelector(`#reviews > section > div.css-1qn0b6x > ul > li:nth-child(${z + 1}) > div > div.css-1cfy6na > div > div > div > div > div > a > img`).getAttribute('src'))
+              images.push(document.querySelector(`#reviews > section > div.css-1qn0b6x > ul > li:nth-child(${z + 1}) > div > div.css-1cfy6na > div > div > div > div > div > img`).getAttribute('src'))
+
             }
           }
 
