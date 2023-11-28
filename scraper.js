@@ -12,10 +12,10 @@ const { Storage } = require('@google-cloud/storage');
 "#reviews > section > div.css-1qn0b6x > ul > li:nth-child(1)"
   
 //name 
-  `#reviews > section > div.css-1qn0b6x > ul > li:nth-child(${z + 1}) > div > div.css-174a15u > div > div.css-1u1p5a2 > div > div > div.arrange-unit__09f24__rqHTg.arrange-unit-fill__09f24__CUubG.css-1qn0b6x > div.user-passport-info.css-1qn0b6x > span > a`
+  `#reviews > section > div.css-1qn0b6x > ul > li:nth-child(2) > div > div.css-1vgj5dw > div > div.css-1u1p5a2 > div > div > div.arrange-unit__09f24__rqHTg.arrange-unit-fill__09f24__CUubG.css-1qn0b6x > div.user-passport-info.css-1qn0b6x > span > a`).textContent
 
 //location
-`#reviews > section > div.css-1qn0b6x > ul > li:nth-child(${z + 1}) > div > div.css-174a15u > div > div.css-1u1p5a2 > div > div > div.arrange-unit__09f24__rqHTg.arrange-unit-fill__09f24__CUubG.css-1qn0b6x > div.user-passport-info.css-1qn0b6x > div > div > span`).textContent
+`#reviews > section > div.css-1qn0b6x > ul > li:nth-child(${z + 1}) > div > div.css-1vgj5dw > div > div.css-1u1p5a2 > div > div > div.arrange-unit__09f24__rqHTg.arrange-unit-fill__09f24__CUubG.css-1qn0b6x > div.user-passport-info.css-1qn0b6x > div > div > span`).textContent
 
 //rating
 `#reviews > section > div.css-1qn0b6x > ul > li:nth-child(${z + 1}) > div > div.css-10n911v > div > div:nth-child(1) > span > div`).getAttribute('aria-label');
@@ -39,7 +39,7 @@ const { Storage } = require('@google-cloud/storage');
 `#reviews > section > div.css-1qn0b6x > ul > li:nth-child(${z + 1}) > div > div.css-1cfy6na > div > div > div > div > div> img`).getAttribute('src'))
 
 //userLink 
-`#reviews > section > div.css-1qn0b6x > ul > li:nth-child(${z + 1}) > div > div.css-174a15u > div > div.css-1u1p5a2 > div > div > div.arrange-unit__09f24__rqHTg.arrange-unit-fill__09f24__CUubG.css-1qn0b6x > div.user-passport-info.css-1qn0b6x > span > a`).getAttribute('href')
+`#reviews > section > div.css-1qn0b6x > ul > li:nth-child(${z + 1}) > div > div.css-1vgj5dw > div > div.css-1u1p5a2 > div > div > div.arrange-unit__09f24__rqHTg.arrange-unit-fill__09f24__CUubG.css-1qn0b6x > div.user-passport-info.css-1qn0b6x > span > a`).getAttribute('href')
 
 
 */
@@ -154,8 +154,8 @@ async function scraperYelpReviews(url, getAmount) {
 
 
         let reviewObject = await page.evaluate((z) => {
-          let name = document.querySelector(`#reviews > section > div.css-1qn0b6x > ul > li:nth-child(${z + 1}) > div > div.css-174a15u > div > div.css-1u1p5a2 > div > div > div.arrange-unit__09f24__rqHTg.arrange-unit-fill__09f24__CUubG.css-1qn0b6x > div.user-passport-info.css-1qn0b6x > span > a`).textContent
-          let location = document.querySelector(`#reviews > section > div.css-1qn0b6x > ul > li:nth-child(${z + 1}) > div > div.css-174a15u > div > div.css-1u1p5a2 > div > div > div.arrange-unit__09f24__rqHTg.arrange-unit-fill__09f24__CUubG.css-1qn0b6x > div.user-passport-info.css-1qn0b6x > div > div > span`).textContent
+          let name = document.querySelector(`#reviews > section > div.css-1qn0b6x > ul > li:nth-child(${z + 1}) > div > div.css-1vgj5dw > div > div.css-1u1p5a2 > div > div > div.arrange-unit__09f24__rqHTg.arrange-unit-fill__09f24__CUubG.css-1qn0b6x > div.user-passport-info.css-1qn0b6x > span > a`).textContent
+          let location = document.querySelector(`#reviews > section > div.css-1qn0b6x > ul > li:nth-child(${z + 1}) > div > div.css-1vgj5dw > div > div.css-1u1p5a2 > div > div > div.arrange-unit__09f24__rqHTg.arrange-unit-fill__09f24__CUubG.css-1qn0b6x > div.user-passport-info.css-1qn0b6x > div > div > span`).textContent
           let text = document.querySelector(`#reviews > section > div.css-1qn0b6x > ul > li:nth-child(${z + 1}) > div > div.css-9ul5p9 > p > span`).textContent
 
           let rating = document.querySelector(`#reviews > section > div.css-1qn0b6x > ul > li:nth-child(${z + 1}) > div > div.css-10n911v > div > div:nth-child(1) > span > div`).getAttribute('aria-label');
@@ -180,7 +180,7 @@ async function scraperYelpReviews(url, getAmount) {
           }
 
 
-          let userLink = document.querySelector(`#reviews > section > div.css-1qn0b6x > ul > li:nth-child(${z + 1}) > div > div.css-174a15u > div > div.css-1u1p5a2 > div > div > div.arrange-unit__09f24__rqHTg.arrange-unit-fill__09f24__CUubG.css-1qn0b6x > div.user-passport-info.css-1qn0b6x > span > a`).getAttribute('href')
+          let userLink = document.querySelector(`#reviews > section > div.css-1qn0b6x > ul > li:nth-child(${z + 1}) > div > div.css-1vgj5dw > div > div.css-1u1p5a2 > div > div > div.arrange-unit__09f24__rqHTg.arrange-unit-fill__09f24__CUubG.css-1qn0b6x > div.user-passport-info.css-1qn0b6x > span > a`).getAttribute('href')
 
           userLink = "https://www.yelp.com/" + userLink
           return { name, location, rating, text, date, images, userLink }
